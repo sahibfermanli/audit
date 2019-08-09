@@ -343,3 +343,11 @@ table.references-table tr td:hover a {
 #search-cost-area, #search-date-area {
     display: none;
 }
+
+td {
+    white-space: nowrap;
+}
+
+.columns {
+    cursor: pointer;
+}
