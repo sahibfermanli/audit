@@ -12,6 +12,7 @@ use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class DiscrepancyController extends Controller
@@ -169,6 +170,57 @@ class DiscrepancyController extends Controller
             return response(['case' => 'success', 'title' => 'Success!', 'content' => 'Successful!', 'id'=>$request->id]);
         } catch (\Exception $e) {
             return response(['case' => 'error', 'title' => 'Error!', 'content' => 'An error occurred!']);
+        }
+    }
+
+    public function get_add_discrepancy() {
+        try {
+            $flights = Flights::whereNull('deleted_by')->orderBy('flight')->select('flight')->get();
+            $processes = Process::whereNull('deleted_by')->orderBy('proc_desc')->select('id', 'proc_desc')->get();
+            $departments = Departments::whereNull('deleted_by')->orderby('department_desc')->select('id', 'department_desc')->get();
+            $sources = Sources::whereNull('deleted_by')->orderBy('source_desc')->select('id', 'source_desc')->get();
+
+            return view("backend.discrepancy_form", compact(
+                'flights',
+                'processes',
+                'departments',
+                'sources'
+            ));
+        } catch (\Exception $exception) {
+            return view("backend.error");
+        }
+    }
+
+    public function post_add_discrepancy(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'item_date' => ['required', 'date'],
+            'flt_number' => ['nullable', 'string', 'max:10'],
+            'proc_id' => ['required', 'integer'],
+            'dep_id' => ['required', 'integer'],
+            'item_desc' => ['nullable', 'string'],
+            'item_desc_short' => ['required', 'string'],
+            'source_id' => ['required', 'integer'],
+            'need_kd' => ['nullable', 'integer'],
+            'status' => ['nullable', 'integer'],
+            'detect_person' => ['nullable', 'string', 'max:255'],
+            'resolve_person' => ['nullable', 'string', 'max:255'],
+        ]);
+        if ($validator->fails()) {
+            Session::flash('message', 'Please fill in the required fields!');
+            Session::flash('class', 'warning');
+            Session::flash('display', 'block');
+            return redirect()->refresh();
+        }
+        try {
+            $request->merge(['created_by'=>Auth::id()]);
+            Discrepancy::create($request->all());
+
+            Session::flash('message', 'Discrepancy successfully added!');
+            Session::flash('class', 'success');
+            Session::flash('display', 'block');
+            return redirect()->route("discrepancies");
+        } catch (\Exception $exception) {
+            return view("backend.error");
         }
     }
 }

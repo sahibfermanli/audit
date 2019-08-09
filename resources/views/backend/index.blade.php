@@ -1,4 +1,4 @@
-@extends('parcel.app')
+@extends('backend.app')
 @section('title')
     Home
 @endsection

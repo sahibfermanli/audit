@@ -5,7 +5,11 @@
 @section('content')
     <div class="mycontainer">
         <div class="">
-            <div class="main-part-2">
+            <div class="main-part-2">@if(session('display') == 'block')
+                    <div class="alert alert-{{session('class')}}" role="alert">
+                        {{session('message')}}
+                    </div>
+                @endif
                 <div class="panel panel-default">
                     <div class="panel-body">
                         <div id="search-inputs-area" class="search-areas">
@@ -96,6 +100,7 @@
                     <div>
                         {!! $discrepancies->links(); !!}
                     </div>
+                    <a class="btn btn-warning" href="{{route("get_add_discrepancy")}}">Add</a>
                     <table class="references-table">
                         <thead>
                         <tr>

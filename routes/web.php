@@ -17,7 +17,8 @@ Route::get('/', 'HomeController@index')->name("home");
 Route::group(['prefix'=>'/discrepancies'], function () {
     Route::get('/', 'DiscrepancyController@get_discrepancy_records')->name("discrepancies");
     Route::get('/archive', 'DiscrepancyController@get_discrepancy_archive')->name("archive_discrepancies");
-//    Route::post('/add', 'AreaController@add_area');
+    Route::get('/add', 'DiscrepancyController@get_add_discrepancy')->name("get_add_discrepancy");
+    Route::post('/add', 'DiscrepancyController@post_add_discrepancy')->name("post_add_discrepancy");
 //    Route::post('/update', 'AreaController@update_area');
     Route::delete('/delete', 'DiscrepancyController@delete_discrepancy_record')->name("discrepancies_delete");
 });
