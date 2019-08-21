@@ -117,10 +117,18 @@
                         </tr>
                         </thead>
                         @foreach($discrepancies as $discrepancy)
+                            @php($date = substr($discrepancy->item_date, 0, 10))
                             <tr class="rows" id="row_{{$discrepancy->id}}" onclick="select_row({{$discrepancy->id}})">
-                                <td></td>
+                                <td>
+                                    <a href="{{route("get_update_discrepancy", $discrepancy->id)}}" class="btn btn-warning btn-xs"><i class="glyphicon glyphicon-edit"></i></a>
+                                    @if(!empty($discrepancy->doc))
+                                        <a target="_blank" href="{{$discrepancy->doc}}" class="btn btn-success btn-xs"><i class="glyphicon glyphicon-file"></i></a>
+                                    @else
+                                        <a disabled="" class="btn btn-success btn-xs"><i class="glyphicon glyphicon-file"></i></a>
+                                    @endif
+                                </td>
                                 <td>{{$discrepancy->id}}</td>
-                                <td>{{$discrepancy->item_date}}</td>
+                                <td>{{$date}}</td>
                                 <td>{{$discrepancy->flt_number}}</td>
                                 <td>{{$discrepancy->proc_code}} - {{$discrepancy->proc_desc}}</td>
                                 <td>{{$discrepancy->dep_code}} - {{$discrepancy->department_desc}}</td>
@@ -157,42 +165,5 @@
 @endsection
 
 @section('js')
-    <script>
-        {{--$(document).ready(function(){--}}
-        {{--    var url = window.location.href;--}}
-        {{--    var url_arr = url.split('discrepancyid');--}}
-        {{--    var where_url = 'discrepancyid' + url_arr[1];--}}
 
-        {{--    if (url_arr.length > 1) {--}}
-        {{--        $('.pagination').each(function(){--}}
-        {{--            $(this).find('a').each(function(){--}}
-        {{--                var current = $(this);--}}
-        {{--                var old_url = current.attr('href');--}}
-        {{--                var new_url = old_url + '&' + where_url;--}}
-        {{--                current.prop('href', new_url);--}}
-        {{--            });--}}
-        {{--        });--}}
-        {{--    }--}}
-
-        {{--    var event_search_val = "{{$search_arr['event']}}";--}}
-        {{--    $("#event_search").val(event_search_val);--}}
-        {{--});--}}
-
-        {{--function search_data() {--}}
-        {{--    var flight = $('#flight_search').val();--}}
-        {{--    var event = $('#event_search').val();--}}
-        {{--    var discrepancyid = $('#discrepancyid_search').val();--}}
-        {{--    var name = $('#name_search').val();--}}
-        {{--    var phone = $('#phone_search').val();--}}
-        {{--    var description = $('#description_search').val();--}}
-        {{--    var city = $('#city_search').val();--}}
-        {{--    var address = $('#address_search').val();--}}
-        {{--    var start_date = $('#start_date_search').val();--}}
-        {{--    var end_date = $('#end_date_search').val();--}}
-
-        {{--    var link = '?discrepancyid=' + discrepancyid + '&name=' + name + '&phone=' + phone + '&description=' + description + '&city=' + city + '&address=' + address + '&start_date=' + start_date + '&end_date=' + end_date + '&flight=' + flight + '&event=' + event;--}}
-
-        {{--    location.href = link;--}}
-        {{--}--}}
-    </script>
 @endsection

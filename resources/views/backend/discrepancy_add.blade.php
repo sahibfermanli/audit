@@ -1,6 +1,6 @@
 @extends('backend.app')
 @section('title')
-    Non-compliance report
+    Add non-compliance report
 @endsection
 @section('content')
     <div class="container" style="padding-top: 10px;">
@@ -9,7 +9,7 @@
                 {{session('message')}}
             </div>
         @endif
-        <form action="{{route("post_add_discrepancy")}}" method="post">
+        <form action="{{route("post_add_discrepancy")}}" method="post" enctype="multipart/form-data">
             {{csrf_field()}}
             <div class="form-row">
                 <div class="form-group col-md-4">
@@ -82,7 +82,7 @@
                 </div>
             </div>
             <div class="form-row">
-                <div class="form-group col-md-6">
+                <div class="form-group col-md-4">
                     <label for="need_kd">Corrective action</label>
                     <select id="need_kd" class="form-control" name="need_kd">
                         <option value="0">Undefined</option>
@@ -90,12 +90,16 @@
                         <option value="2">Not required</option>
                     </select>
                 </div>
-                <div class="form-group col-md-6">
+                <div class="form-group col-md-4">
                     <label for="status">Status</label>
                     <select id="status" class="form-control" name="status">
                         <option value="0">Open</option>
                         <option value="1">Closed</option>
                     </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="doc">Document</label>
+                    <input type="file" class="form-control" id="doc" name="document" accept=".xlsx,.xls,.doc, .docx,.txt,.pdf" />
                 </div>
             </div>
 
@@ -116,5 +120,11 @@
 @endsection
 
 @section('js')
+    <script>
+        $(document).ready(function(){
+            var current_date = get_current_date();
 
+            $("#date").val(current_date);
+        });
+    </script>
 @endsection

@@ -351,3 +351,13 @@ td {
 .columns {
     cursor: pointer;
 }
+
+.discrepancy-th {
+    background-color: #0008ff;
+    color: white;
+}
+
+.discrepancy-head {
+    text-align: center;
+    font-weight: bold;
+}

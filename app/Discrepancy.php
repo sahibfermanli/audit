@@ -19,6 +19,7 @@ class Discrepancy extends Model
         'status',
         'detect_person',
         'resolve_person',
+        'doc',
         'created_by',
         'deleted_by',
         'deleted_at',

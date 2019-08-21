@@ -11,11 +11,13 @@ use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-class DiscrepancyController extends Controller
+class DiscrepancyController extends HomeController
 {
     public function get_discrepancy_records() {
         return $this->discrepancy_records(0, "Discrepancies");
@@ -121,6 +123,7 @@ class DiscrepancyController extends Controller
                 ->orderBy($short_by, $shortType)
                 ->select(
                     'disc_records.id',
+                    'disc_records.doc',
                     'disc_records.item_date',
                     'disc_records.flt_number',
                     'disc_records.item_desc_short',
@@ -180,7 +183,7 @@ class DiscrepancyController extends Controller
             $departments = Departments::whereNull('deleted_by')->orderby('department_desc')->select('id', 'department_desc')->get();
             $sources = Sources::whereNull('deleted_by')->orderBy('source_desc')->select('id', 'source_desc')->get();
 
-            return view("backend.discrepancy_form", compact(
+            return view("backend.discrepancy_add", compact(
                 'flights',
                 'processes',
                 'departments',
@@ -204,6 +207,7 @@ class DiscrepancyController extends Controller
             'status' => ['nullable', 'integer'],
             'detect_person' => ['nullable', 'string', 'max:255'],
             'resolve_person' => ['nullable', 'string', 'max:255'],
+            'document' => ['nullable', 'mimes:doc,docx,xls,xlsx,pdf,txt'],
         ]);
         if ($validator->fails()) {
             Session::flash('message', 'Please fill in the required fields!');
@@ -213,7 +217,21 @@ class DiscrepancyController extends Controller
         }
         try {
             $request->merge(['created_by'=>Auth::id()]);
-            Discrepancy::create($request->all());
+
+            if (isset($request->document)) {
+                $image_name = 'discrepancy_' . str_random(4) . '_' . microtime();
+                Storage::disk('uploads')->makeDirectory('files/documents');
+                $cover = $request->file('document');
+                $extension = $cover->getClientOriginalExtension();
+                Storage::disk('uploads')->put('files/documents/'. $image_name.'.'.$extension,  File::get($cover));
+                $image_address = '/uploads/files/documents/' . $image_name.'.'.$extension;
+                $request['doc'] = $image_address;
+            }
+
+            unset($request['document']);
+            $request = Input::except('document');
+
+            Discrepancy::create($request);
 
             Session::flash('message', 'Discrepancy successfully added!');
             Session::flash('class', 'success');
@@ -221,6 +239,133 @@ class DiscrepancyController extends Controller
             return redirect()->route("discrepancies");
         } catch (\Exception $exception) {
             return view("backend.error");
+        }
+    }
+
+    public function get_update_discrepancy($id) {
+        if (!isset($id) || empty($id) || is_int($id)) {
+            Session::flash('message', 'Oops! ID not found!');
+            Session::flash('class', 'warning');
+            Session::flash('display', 'block');
+            return redirect()->route("discrepancies");
+        }
+
+        try {
+            $discrepancy = Discrepancy::where('id', $id)->whereNull('deleted_by')->select(
+                'id',
+                'doc',
+                'item_date',
+                'proc_id',
+                'dep_id',
+                'source_id',
+                'flt_number',
+                'item_desc_short',
+                'item_desc',
+                'detect_person',
+                'resolve_person',
+                'need_kd',
+                'status'
+            )->first();
+
+            if (!$discrepancy) {
+                Session::flash('message', 'Oops! Discrepancy not found!');
+                Session::flash('class', 'warning');
+                Session::flash('display', 'block');
+                return redirect()->route("discrepancies");
+            }
+
+            $flights = Flights::whereNull('deleted_by')->orderBy('flight')->select('flight')->get();
+            $processes = Process::whereNull('deleted_by')->orderBy('proc_desc')->select('id', 'proc_desc')->get();
+            $departments = Departments::whereNull('deleted_by')->orderby('department_desc')->select('id', 'department_desc')->get();
+            $sources = Sources::whereNull('deleted_by')->orderBy('source_desc')->select('id', 'source_desc')->get();
+
+            return view("backend.discrepancy_update", compact(
+                'flights',
+                'processes',
+                'departments',
+                'sources',
+                'discrepancy'
+            ));
+        } catch (\Exception $exception) {
+            return view("backend.error");
+        }
+    }
+
+    public function post_update_discrepancy(Request $request, $id) {
+        if (!isset($id) || empty($id) || is_int($id)) {
+            Session::flash('message', 'Oops! ID not found!');
+            Session::flash('class', 'warning');
+            Session::flash('display', 'block');
+            return redirect()->route("discrepancies");
+        }
+
+        $validator = Validator::make($request->all(), [
+            'item_date' => ['required', 'date'],
+            'flt_number' => ['nullable', 'string', 'max:10'],
+            'proc_id' => ['required', 'integer'],
+            'dep_id' => ['required', 'integer'],
+            'item_desc' => ['nullable', 'string'],
+            'item_desc_short' => ['required', 'string'],
+            'source_id' => ['required', 'integer'],
+            'need_kd' => ['nullable', 'integer'],
+            'status' => ['nullable', 'integer'],
+            'detect_person' => ['nullable', 'string', 'max:255'],
+            'resolve_person' => ['nullable', 'string', 'max:255'],
+            'document' => ['nullable', 'mimes:doc,docx,xls,xlsx,pdf,txt'],
+        ]);
+        if ($validator->fails()) {
+            Session::flash('message', 'Please fill in the required fields!');
+            Session::flash('class', 'warning');
+            Session::flash('display', 'block');
+            return redirect()->refresh();
+        }
+        try {
+            unset($request['_token']);
+
+            if (Discrepancy::where('id', $id)->whereNull('deleted_by')->count('id') == 0) {
+                Session::flash('message', 'Oops! Discrepancy not found!');
+                Session::flash('class', 'warning');
+                Session::flash('display', 'block');
+                return redirect()->route("discrepancies");
+            }
+
+            if (isset($request->document)) {
+                $image_name = 'discrepancy_' . str_random(4) . '_' . microtime();
+                Storage::disk('uploads')->makeDirectory('files/documents');
+                $cover = $request->file('document');
+                $extension = $cover->getClientOriginalExtension();
+                Storage::disk('uploads')->put('files/documents/'. $image_name.'.'.$extension,  File::get($cover));
+                $image_address = '/uploads/files/documents/' . $image_name.'.'.$extension;
+                $request['doc'] = $image_address;
+            }
+
+            unset($request['document']);
+            $request = Input::except('document');
+
+            Discrepancy::where('id', $id)->whereNull('deleted_by')->update($request);
+
+            Session::flash('message', 'Discrepancy successfully updated!');
+            Session::flash('class', 'success');
+            Session::flash('display', 'block');
+            return redirect()->route("discrepancies");
+        } catch (\Exception $exception) {
+            return view("backend.error");
+        }
+    }
+
+    public function delete_discrepancy_document(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return response(['case' => 'warning', 'title' => 'Warning!', 'content' => 'Id not found!']);
+        }
+        try {
+            Discrepancy::where(['id'=>$request->id])->update(['doc'=>null]);
+
+            return response(['case' => 'success', 'title' => 'Success!', 'content' => 'Successful!', 'id'=>$request->id]);
+        } catch (\Exception $e) {
+            return response(['case' => 'error', 'title' => 'Error!', 'content' => 'An error occurred!']);
         }
     }
 }

@@ -57,6 +57,15 @@ function select_row(row) {
     row_id = row;
 }
 
+function get_current_date() {
+    var currentDate;
+    var fullDate = new Date();
+    var twoDigitMonth = ((fullDate.getMonth().length+1) === 1)? (fullDate.getMonth()+1) : '0' + (fullDate.getMonth()+1);
+    currentDate = fullDate.getFullYear() + "-" + twoDigitMonth + "-" + fullDate.getDate();
+
+    return currentDate;
+}
+
 //show date area for search
 function date_area() {
     if (show_date_area) {
@@ -68,14 +77,12 @@ function date_area() {
     }
 }
 
-function today() {
+function today_for_date_area() {
     show_date_area = true;
     $('#search-date-area').css('display', 'block');
     $("#date_search").prop('checked', true);
 
-    var fullDate = new Date();
-    var twoDigitMonth = ((fullDate.getMonth().length+1) === 1)? (fullDate.getMonth()+1) : '0' + (fullDate.getMonth()+1);
-    var currentDate = fullDate.getFullYear() + "-" + twoDigitMonth + "-" + fullDate.getDate();
+    var currentDate = get_current_date();
 
     $(".start_date_search").val(currentDate);
     $(".end_date_search").val(currentDate);
